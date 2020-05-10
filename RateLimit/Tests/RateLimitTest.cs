@@ -1,69 +1,57 @@
 using System;
 using Xunit;
-using project;
-using System.Collections.Generic;
 using Moq;
+using project;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace Tests
 {
-    public class RateLimitTest    
+    public class RateLimitTest
     {
-        //private Mock<IRequest> request;
-        private Mock<ITimer> timer;
+        private ITimer timer;
         string request = "R1";
+        private RateLimit _ratelimiter;
+        private  Dictionary<string, int> _requestCount = new Dictionary<string, int>();
+
         public RateLimitTest()
         {
-            //request = new Mock<IRequest>();
-            timer = new Mock<ITimer>();
-            
+            timer = Mock.Of<ITimer>();
+            _ratelimiter = new RateLimit(timer, _requestCount);           
         }
 
         [Fact]
-        public void CountOneRequestLessThanMax_SouldReturnOK()
+        public void ValidateARequestInTimeSpanLessThanMax_ShouldReturnTrue()
         {
-            // request.Setup(r => r.GetAllRequests()).Returns(new Dictionary<string, int>(){
-            //     {"R1", 5}
-            // });
+            Mock.Get(timer).Setup(t => t.IsTimerStarted(request)).Returns(true);
+            Mock.Get(timer).Setup(t => t.IsTimerExpired(request)).Returns(false);
 
-            timer.Setup(r => r.IsFinished()).Returns(true);
+            _requestCount.Add(request, 3);      
 
-            var result = RateLimit.ValidateRequest(request);
+            Assert.True(_ratelimiter.ValidateRequest(request));
 
-            Assert.True(result);
         }
 
-        //setup
-        //SetTimer
-        //StartsTimer
-        //MakeRequests(create the dictionary of requests and repeat)
+        [Fact]
+        public void ValidateARequestInTimeSpanMoreThanMax_ShouldReturnFalse()
+        {
+            Mock.Get(timer).Setup(t => t.IsTimerStarted(request)).Returns(true);
+            Mock.Get(timer).Setup(t => t.IsTimerExpired(request)).Returns(false);        
 
-        //Tets
-        //CountOneRequestLessThanMax_SouldReturnOK
-        //Mock of timer to say it has elapsed(reached limit)
-        //Mock of "a funcion" that builds a dictionary
-        //Now look into built dictionary and analyse values 
-        // [Fact]
-        // public void CountRequestsPerId_ShouldReturnOK()
-        // {
-        //     var Dictionary = new Dictionary<int, int>();
-        //     Dictionary.Add(1, 5);
+            _requestCount.Add(request, 4);      
 
-        //     Assert.Equal("OK", RateLimit.CountRequests(Dictionary));
-            
-
-        // }
+            Assert.False(_ratelimiter.ValidateRequest(request));
+        }
 
         [Fact]
-        public void Dummy()
+        public void ValidateARequestLessThanMaxWithExpiredTimer_ShouldReturnFalse()
         {
-            //SetTimer
-                //StartsTimer
-            //MakeRequests
+            Mock.Get(timer).Setup(t => t.IsTimerStarted(request)).Returns(true);
+            Mock.Get(timer).Setup(t => t.IsTimerExpired(request)).Returns(true);        
 
+            _requestCount.Add(request, 3);      
 
-
-            
-
+            Assert.False(_ratelimiter.ValidateRequest(request));
         }
     }
 }

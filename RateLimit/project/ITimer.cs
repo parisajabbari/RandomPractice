@@ -1,7 +1,7 @@
-using System;
-
 public interface ITimer
 {
-    bool IsFinished();
-    
+    void StartTimer(string request);
+    bool IsTimerStarted(string request);
+    bool IsTimerExpired(string request);
+
 }

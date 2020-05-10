@@ -1,23 +1,39 @@
 ﻿using System;
-using System. Collections.Generic;
-using System.Timers;
+using System.Collections.Generic;
 
 namespace project
 {
-    //max request from each id = 10 in 5 seconds
     public class RateLimit
     {
-        private ITimer _timer;
+         Dictionary<string, int> _requestCount = new Dictionary<string, int>();
+         ITimer _timer;
+         int _maxRequest = 5;
 
-        public RateLimit(ITimer timer, IRequest request)
+        public RateLimit(ITimer timer, Dictionary<string, int> requestCount)
         {
             _timer = timer;
+            _requestCount = requestCount;
+            
         }
 
-        public static bool ValidateRequest(string request)
+        public bool ValidateRequest(string request)
         {
+            if(!_timer.IsTimerStarted(request))
+            {
+                _timer.StartTimer(request);
+            }
+
+            if(!_timer.IsTimerExpired(request))
+            {
+                if(!_requestCount.ContainsKey(request))
+                {
+                    _requestCount[request] = 0;
+                }
+                _requestCount[request]++;
+
+                return _requestCount[request] < _maxRequest;
+            }
             return false;
         }
-        
     }
 }
