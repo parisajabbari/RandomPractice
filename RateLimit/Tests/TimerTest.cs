@@ -1,9 +1,8 @@
 using System;
 using Xunit;
 using Moq;
-using project;
-using System.Linq;
-using System.Collections.Generic;
+using System.Threading;
+
 
 namespace Tests
 {
@@ -27,20 +26,31 @@ namespace Tests
         }
 
         [Fact]
-        public void TimerIsNotExpired_ShouldReturnFalse()
+        public void TimerIsExpired_After2Seconds_ShouldReturnTrue()
         {
+            var autoResetEvent = new AutoResetEvent(false);
+
             var timer = new RateTimer();
             timer.StartTimer(request);
 
-            Assert.False(timer.IsTimerExpired(request));
+            autoResetEvent.WaitOne(3000);
+            autoResetEvent.Set();
+
+            Assert.True(timer.IsTimerExpired(request));
         }
 
         [Fact]
-        public void TimerIsExpired_After2Seconds_ShouldReturnTrue()
+        public void TimerIsValid_Before2Seconds_ShouldReturnFalse()
         {
+            var autoResetEvent = new AutoResetEvent(false);
+
             var timer = new RateTimer();
             timer.StartTimer(request);
-        }
 
+            autoResetEvent.WaitOne(1000);
+            autoResetEvent.Set();
+
+            Assert.False(timer.IsTimerExpired(request));
+        }
     }
 }
