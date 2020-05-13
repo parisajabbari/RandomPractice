@@ -4,4 +4,6 @@ public interface ITimer
     bool IsTimerStarted(string request);
     bool IsTimerExpired(string request);
 
+    void ResetTimer(string request);
+
 }

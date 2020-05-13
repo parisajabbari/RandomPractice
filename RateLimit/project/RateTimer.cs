@@ -30,4 +30,12 @@ public class RateTimer : ITimer
         return map.ContainsKey(request) ?  false :  true;
         
     }
+
+    public void ResetTimer(string request)
+    {
+        if(IsTimerExpired(request))
+        {
+            StartTimer(request);
+        }
+    }
 }

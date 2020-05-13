@@ -52,5 +52,6 @@ namespace Tests
 
             Assert.False(timer.IsTimerExpired(request));
         }
+
     }
 }

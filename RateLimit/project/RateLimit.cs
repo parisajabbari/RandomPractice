@@ -9,29 +9,38 @@ namespace project
          ITimer _timer;
          int _maxRequest = 5;
 
-        public RateLimit(ITimer timer, Dictionary<string, int> requestCount)
+
+        public RateLimit(ITimer timer)
         {
             _timer = timer;
-            _requestCount = requestCount;
             
         }
 
-        public bool ValidateRequest(string request)
+        public void Register(string request)
         {
             if(!_timer.IsTimerStarted(request))
             {
+                _requestCount.Clear();
                 _timer.StartTimer(request);
             }
 
-            if(!_timer.IsTimerExpired(request))
-            {
-                if(!_requestCount.ContainsKey(request))
-                {
-                    _requestCount[request] = 0;
-                }
-                _requestCount[request]++;
 
-                return _requestCount[request] < _maxRequest;
+            if(!_requestCount.ContainsKey(request))
+            {
+                _requestCount[request] = 0;
+            }
+            _requestCount[request]++;
+
+        }
+        public bool ValidateRequest(string request)
+        {
+            if(_requestCount[request] < _maxRequest)
+            {
+                if(_timer.IsTimerExpired(request))
+                {
+                    _timer.ResetTimer(request);
+                }
+                return true;
             }
             return false;
         }

@@ -4,6 +4,7 @@ using Moq;
 using project;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Tests
 {
@@ -17,7 +18,7 @@ namespace Tests
         public RateLimitTest()
         {
             timer = Mock.Of<ITimer>();
-            _ratelimiter = new RateLimit(timer, _requestCount);           
+            _ratelimiter = new RateLimit(timer);           
         }
 
         [Fact]
@@ -26,7 +27,8 @@ namespace Tests
             Mock.Get(timer).Setup(t => t.IsTimerStarted(request)).Returns(true);
             Mock.Get(timer).Setup(t => t.IsTimerExpired(request)).Returns(false);
 
-            _requestCount.Add(request, 3);      
+            _ratelimiter.Register(request); 
+            _ratelimiter.Register(request); 
 
             Assert.True(_ratelimiter.ValidateRequest(request));
 
@@ -38,20 +40,27 @@ namespace Tests
             Mock.Get(timer).Setup(t => t.IsTimerStarted(request)).Returns(true);
             Mock.Get(timer).Setup(t => t.IsTimerExpired(request)).Returns(false);        
 
-            _requestCount.Add(request, 4);      
+            _ratelimiter.Register(request); 
+            _ratelimiter.Register(request);
+            _ratelimiter.Register(request); 
+            _ratelimiter.Register(request);
+            _ratelimiter.Register(request); 
+            _ratelimiter.Register(request);  
 
             Assert.False(_ratelimiter.ValidateRequest(request));
         }
 
         [Fact]
-        public void ValidateARequestLessThanMaxWithExpiredTimer_ShouldReturnFalse()
+        public void ValidateARequestLessThanMaxWithExpiredTimer_ShouldReturntrue()
         {
             Mock.Get(timer).Setup(t => t.IsTimerStarted(request)).Returns(true);
             Mock.Get(timer).Setup(t => t.IsTimerExpired(request)).Returns(true);        
 
-            _requestCount.Add(request, 3);      
+            _ratelimiter.Register(request); 
+            _ratelimiter.Register(request);      
 
-            Assert.False(_ratelimiter.ValidateRequest(request));
+            Assert.True(_ratelimiter.ValidateRequest(request));
         }
+
     }
 }
